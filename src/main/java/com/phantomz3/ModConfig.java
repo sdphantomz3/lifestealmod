@@ -13,4 +13,5 @@ public class ModConfig implements ConfigData {
     public boolean noDragonEggEnderChest = true;
     public int riptideCooldown = 200; // 200 ticks = 10 seconds
     public boolean riptideCooldownEnabled = true;
+    public boolean healPlayerOnWithdraw = false;
 }

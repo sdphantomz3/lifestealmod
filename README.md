@@ -23,6 +23,11 @@ This Lifesteal mod is identical by the Lifesteal SMP. In this mod, if you kill a
 - Players can use `/lifesteal viewRecipes` to view the recipes of heart and the revive beacon.
 - End crystals deal no damage to the player nor the environment.
 - Respawn anchors works in the nether but not in the overworld and the end dimensions.
+- --- **UPDATE 2.1** ---
+- Changed /recipes screen to gray stained glass (looks better)
+- Added /lifesteal set <player> <amount>
+- Added /lifesteal take <player> <amount>
+- Added a config option for healing on withdraw
 
 ### Next update:
 - Add mod menu support.
@@ -35,7 +40,9 @@ More features will be added. (Possibly maybe idk for sure)
 - **/lifesteal oprevive [player_name]:** Revives the specified player (only works if you are an operator, use the revive beacon to revive if you are not an operator).
 - **/lifesteal withdraw [number]:** Withdraws the specified number of hearts from your total hearts.
 - **/lifesteal viewRecipes:** Opens a GUI with both the heart and the revive beacon recipes.
-- **/lifesteal give [player_name] [amount]:** Adds the specified amount of hearts to the other players health bar (only works if you are a operator and bypasses heart cap). 
+- **/lifesteal give [player_name] [amount]:** Adds the specified amount of hearts to the other players health bar (only works if you are a operator and bypasses heart cap).
+- **/lifesteal set [player_name] [amount]:** Sets the other players health bat to the specified amount of hearts (only works if you are a operator and bypasses heart cap).
+- **/lifesteal take [player_name] [amount]:** Takes the specified amount of hearts from the other players health bar (only works if you are a operator and bypasses heart cap). 
 
 ## Config
 You can edit the mod config by going into the `config` directory and then opening the lifestealmod.json in any text editor.
@@ -50,6 +57,7 @@ You can edit the mod config by going into the `config` directory and then openin
   "noDragonEggEnderChest": true,
   "riptideCooldown": 200,
   "riptideCooldownEnabled": true
+  "healPlayerOnWithdraw": false"
 }
 ```
 
@@ -62,6 +70,7 @@ You can edit the mod config by going into the `config` directory and then openin
 - **noDragonEggEnderChest**: Prevents players from placing dragon egg in ender chests when set to `true`.
 - **riptideCooldown**: Configurable cooldown for the trident (in ticks).
 - **riptideCooldownEnabled**: Enables riptide cooldown when set to `true`.
+- **healPlayerOnWithdraw**: Heals the player when running the command /lifesteal withdraw when set to `true`.
 
 ## License
 

@@ -1,7 +1,14 @@
 package com.phantomz3;
 
+import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -12,7 +19,6 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.block.RespawnAnchorBlock;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.LoreComponent;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -25,9 +31,6 @@ import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerListener;
 import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -38,16 +41,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
-
-import org.apache.logging.log4j.core.jmx.Server;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
-
-import java.util.Collection;
-import java.util.List;
 
 public class LifestealMod implements ModInitializer {
 	public static final String MOD_ID = "lifestealmod";
@@ -451,9 +444,14 @@ public class LifestealMod implements ModInitializer {
 											player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
 													.setBaseValue(newMaxHealth);
 
-											// restoring current health if it is less than the new max health
-											if (playerCurrentHealth < newMaxHealth) {
-												player.setHealth((float) newMaxHealth);
+											// restoring current health if it is less than the new max health and if enabled in config
+
+											ModConfig config = AutoConfig.getConfigHolder(ModConfig.class).getConfig();
+
+											if (config.healPlayerOnWithdraw) {
+											    if (playerCurrentHealth < newMaxHealth) {
+											  		player.setHealth((float) newMaxHealth);
+												}
 											}
 
 											ItemStack heartStack = createCustomNetherStar("Heart");
@@ -471,6 +469,51 @@ public class LifestealMod implements ModInitializer {
 
 										return amount;
 									})))
+						.then(CommandManager.literal("take")
+							.requires(source -> source.hasPermissionLevel(2))
+							.then(CommandManager.argument("targets", EntityArgumentType.players())
+										.then(CommandManager.argument("amount", IntegerArgumentType.integer(0))
+												.executes(context -> {
+													Collection<ServerPlayerEntity> targets = EntityArgumentType
+															.getPlayers(context, "targets");
+													int amount = IntegerArgumentType.getInteger(context, "amount");
+	
+													for (ServerPlayerEntity target : targets) {
+														double currentMaxHealth = target
+																.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH);
+														double newMaxHealth = Math.max(2.0,
+																currentMaxHealth - amount * 2.0); // 1 heart = 2.0 health
+	
+														target.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
+																.setBaseValue(newMaxHealth);
+														target.setHealth((float) newMaxHealth); // Set player's health to
+																								// the new max health
+													}
+	
+													return targets.size();
+												}))))
+						.then(CommandManager.literal("set")
+							.requires(source -> source.hasPermissionLevel(2))
+							.then(CommandManager.argument("targets", EntityArgumentType.players())
+										.then(CommandManager.argument("amount", IntegerArgumentType.integer(0))
+												.executes(context -> {
+													Collection<ServerPlayerEntity> targets = EntityArgumentType
+															.getPlayers(context, "targets");
+													int amount = IntegerArgumentType.getInteger(context, "amount");
+	
+													for (ServerPlayerEntity target : targets) {
+														double currentMaxHealth = target
+																.getAttributeBaseValue(EntityAttributes.GENERIC_MAX_HEALTH);
+														double newMaxHealth = Math.max(2.0, amount * 2.0); // 1 heart = 2.0 health
+	
+														target.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH)
+																.setBaseValue(newMaxHealth);
+														target.setHealth((float) newMaxHealth); // Set player's health to
+																								// the new max health
+													}
+	
+													return targets.size();
+												}))))
 					.then(CommandManager.literal("give")
 							.requires(source -> source.hasPermissionLevel(2))
 							.then(CommandManager.argument("targets", EntityArgumentType.players())
@@ -692,7 +735,7 @@ public class LifestealMod implements ModInitializer {
 			// Fill the remaining slots with gray glass panes to indicate empty spaces
 			for (int i = 0; i < inventory.size(); i++) {
 				if (inventory.getStack(i).isEmpty()) {
-					ItemStack glassPane = new ItemStack(Items.WHITE_STAINED_GLASS_PANE);
+					ItemStack glassPane = new ItemStack(Items.GRAY_STAINED_GLASS_PANE); // White to gray (looks nicer)
 					glassPane.set(DataComponentTypes.ITEM_NAME, Text.literal("Empty"));
 					inventory.setStack(i, glassPane);
 				}
